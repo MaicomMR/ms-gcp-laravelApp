@@ -1,10 +1,10 @@
 version: '3'
 
 services:
- app:
+ atlas-docs:
   build: .
   image: maicommr/laravel-app
-  container_name: app
+  container_name: chewbacca-api
   volumes:
    - .:/var/www
   networks:
@@ -12,7 +12,7 @@ services:
   depends_on:
    - db
    - redis
-  entrypoint: "dockerize -template ./.docker/app/.env:.env -wait tcp://db:3306 -timeout 30s ./.docker/entrypoint.sh"
+  entrypoint: "dockerize -template ./docker_config/app/.env:.env -wait tcp://db:3306 -timeout 30s ./docker_config/entrypoint.sh"
   environment:
    - DB_HOST=db
    - DB_PORT=3306
@@ -21,11 +21,11 @@ services:
    - DB_PASSWORD=root
 
  nginx:
-  build: .docker/nginx
-  container_name: nginx
+  build: docker_config/nginx
+  container_name: chewbacca-nginx
   entrypoint: dockerize -template /etc/nginx/conf.d/nginx.conf:/etc/nginx/conf.d/nginx.conf nginx -g "daemon off";
   environment:
-   - APP_NAME=app
+   - APP_NAME=atlas-docs
    - APP_PORT=9000
   restart: always
   tty: true
@@ -36,13 +36,14 @@ services:
   networks:
    - app-network
   depends_on:
-   - app
-  # entrypoint: dockerize -template ./.docker/nginx/nginx.conf:/etc/nginx/conf.d
+   - atlas-docs
+  # entrypoint: dockerize -template ./docker_config/nginx/nginx.conf:/etc/nginx/conf.d
 
 
 
  redis:
   image: redis:alpine
+  container_name: atlas-docs-redis
   expose:
    - 6379
   networks:
@@ -51,7 +52,7 @@ services:
  db:
   image: mysql:5.7
   command: --innodb-use-native-aio=0
-  container_name: atlas-guidelines-database
+  container_name: chewbacca-database
   restart: always
   tty: true
   ports:
@@ -63,8 +64,14 @@ services:
   networks:
    - app-network
   volumes:
-   - ./.docker/dbdata:/var/lib/mysql
+   - ./docker_config/dbdata:/var/lib/mysql
 
 networks:
  app-network:
   driver: bridge
+
+
+
+
+
+
